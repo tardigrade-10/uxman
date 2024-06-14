@@ -56,14 +56,14 @@ class UXMan:
         gpt_cost = calculate_cost_gpt4_omni(self.token_usage)
 
         # report generator
-        
+
 
         # review final report
         return {
             "reviews": reviews,
             "usage": self.token_usage,
             "gpt_cost": gpt_cost,
-            "stages": self.stages,
+            "stages": self.stages
         }
 
     def _validate_image(self):
