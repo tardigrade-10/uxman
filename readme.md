@@ -16,3 +16,4 @@ Flow -
 4. first extract different design elements of the screen - header, footer, courousel, table, media etc. 
 5. extract the text from the screen with position or the element id
 
+python -m uvicorn main:app --reload 

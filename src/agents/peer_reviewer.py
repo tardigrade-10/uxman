@@ -9,10 +9,11 @@ import asyncio
 class PeerReviewerAgent(BaseAgent):
 
     def __init__(
-        self, image_url, system_prompt=DESIGN_PEER_REVIEW_PROMPT, peers_count=5
+        self, image_url, context, system_prompt=DESIGN_PEER_REVIEW_PROMPT, peers_count=5
     ) -> None:
         super(PeerReviewerAgent, self).__init__()
         self.image_url = image_url
+        self.context = context
         self.peers_count = peers_count
         self.messages = [
             {"role": "system", "content": [{"type": "text", "text": system_prompt}]}
@@ -26,7 +27,6 @@ class PeerReviewerAgent(BaseAgent):
     async def step(self):
         tasks = [self.gen() for _ in range(self.peers_count)]
         responses = await asyncio.gather(*tasks)
-        print(responses)
         reviews = []
         for response in responses:
             res_obj = response.dict()
@@ -34,14 +34,16 @@ class PeerReviewerAgent(BaseAgent):
             reviews.append(review)
             usage = res_obj["usage"]
             self.peer_review_token_usage = addUsageDicts(self.peer_review_token_usage, usage)
+        print("REVIEWS:", reviews)
         return reviews, self.peer_review_token_usage
 
     async def gen(self):
         # messages =
-        image_input = {
+        print('gen')
+        _input = {
             "role": "user",
-            "content": [{"type": "image_url", "image_url": self.image_url}],
+            "content": [{"type": "image_url", "image_url": self.image_url}, {"type": "text", "text": self.context}],
         }
-        self.messages.append(image_input)
+        self.messages.append(_input)
         response = await async_creator(messages=self.messages, **vision_model_defaults)
         return response

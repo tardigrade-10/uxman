@@ -20,3 +20,10 @@ def addUsageDicts(a, b):
     a["total_tokens"] += b["total_tokens"]
     return a
 
+def calculate_cost_gpt4_omni(token_usage):
+    prompt = token_usage['prompt_tokens']
+    completion = token_usage['completion_tokens']
+    cost =  (prompt * 0.005 + completion * 0.015) / 1000
+    rate = 83.55
+
+    return {"usd": cost, "inr": cost*rate}

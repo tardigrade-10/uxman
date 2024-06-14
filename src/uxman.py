@@ -1,7 +1,13 @@
 from __future__ import annotations
 from src.agents import PeerReviewerAgent, ReportGeneratorAgent, ReportReviewerAgent
 from PIL import Image
-from src.utils import imageValidator, contextValidator, basicInfoExtractor, addUsageDicts
+from src.utils import (
+    imageValidator,
+    contextValidator,
+    basicInfoExtractor,
+    addUsageDicts,
+    calculate_cost_gpt4_omni,
+)
 import base64
 
 
@@ -27,7 +33,11 @@ class UXMan:
             "gdr": 0,
             "rdr": 0,
         }
-        self.token_usage = {}
+        self.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+        }
         self.peer_count = peer_count
         self.basic_info = ""
         self.peer_reviews = {}
@@ -37,15 +47,24 @@ class UXMan:
         pass
 
     async def step(self):
-        # peer review
-        peer_reviewer = PeerReviewerAgent(image_url=self.image_url)
-        reviews, usage = await peer_reviewer.step()
-        self.token_usage += usage
-        self.stages['dpr'] = 1
 
-        # conclude peer review
+        # peer review
+        peer_reviewer = PeerReviewerAgent(image_url=self.image_url, peers_count=2)
+        reviews, usage = await peer_reviewer.step()
+        self.token_usage = addUsageDicts(self.token_usage, usage)
+        self.stages["dpr"] = 1
+        gpt_cost = calculate_cost_gpt4_omni(self.token_usage)
+
+        # report generator
+        
+
         # review final report
-        return {"reviews": reviews, "usage": self.token_usage, "stages": self.stages}
+        return {
+            "reviews": reviews,
+            "usage": self.token_usage,
+            "gpt_cost": gpt_cost,
+            "stages": self.stages,
+        }
 
     def _validate_image(self):
 
@@ -55,7 +74,7 @@ class UXMan:
             if not valid:
                 raise ValueError("Image is not valid")
             self.stages["vim"] = 1
-            self.token_usage += usage
+            self.token_usage = addUsageDicts(self.token_usage, usage)
         except Exception as e:
             raise e
 
@@ -65,7 +84,7 @@ class UXMan:
         if not valid:
             raise ValueError("context is not valid")
         self.stages["vin"] = 1
-        self.token_usage += usage
+        self.token_usage = addUsageDicts(self.token_usage, usage)
 
     def validate_input(self):
         self._validate_image()
@@ -76,15 +95,15 @@ class UXMan:
     def call_basic_info_extractor(self):
         info, usage = basicInfoExtractor(self.img)
         self.basic_info = info
-        self.token_usage += usage
+        self.token_usage = addUsageDicts(self.token_usage, usage)
         return
 
-    def init(self):
+    async def init(self):
 
         # self.validate_input()
         # self.call_basic_info_extractor()
 
-        response = self.step()
+        response = await self.step()
 
         # validate inputs
         # opt: generate background knowledge
