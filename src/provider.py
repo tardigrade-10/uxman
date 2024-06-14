@@ -14,4 +14,4 @@ async_moderator = async_client.moderations.create
 
 text_model_defaults_3_5 = {"model" : "gpt-3.5-turbo", "temperature" : 0.5, "response_format" : {"type": "json_object"}}
 text_model_defaults = {"model" : "gpt-4o", "temperature" : 0.5, "response_format" : {"type": "json_object"}}
-vision_model_defaults = {"model" : "gpt-4o", "temperature" : 1, "max_tokens": 4000}
+vision_model_defaults = {"model" : "gpt-4o", "temperature" : 1, "max_tokens": 4000, "response_format" : {"type": "json_object"}}

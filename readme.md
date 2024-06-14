@@ -10,8 +10,9 @@ second -
 
 
 Flow - 
-1. User will input an image, a screenshot of the web page or app screenshot
+1. User will input an image, a screenshot of the web page or app screenshot, along with a context to aid the design report, it can be focus areas, background info about the app, target users etc.
 2. validate if it is actually a web page, not a poster, or a generic image
 3. extract the basic info about the app - page type, theme, industry, 
 4. first extract different design elements of the screen - header, footer, courousel, table, media etc. 
-5. extract the text from the screen with position or the element id,
+5. extract the text from the screen with position or the element id
+
