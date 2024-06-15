@@ -21,7 +21,8 @@ async def review_report(image_path, context = ""):
     response = await uxman.init()
     return response
     # except Exception as e:
-    #     raise_http_exception(HTTP_400_BAD_REQUEST, f"An error occurred: {str(e)}")
+        # raise_http_exception(HTTP_400_BAD_REQUEST, f"An error occurred: {str(e)}")
+        # raise Sys
 
 
 # @app.exception_handler(HTTPException)

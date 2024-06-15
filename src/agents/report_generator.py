@@ -38,7 +38,7 @@ class ReportGeneratorAgent(BaseAgent):
             elif report_type == "ux":
                 system_prompt = self.ux_report_prompt
             else:
-                raise ValueError('invalid report type')
+                raise ValueError(f'invalid report type: {report_type}')
             
             messages = [
                 {
@@ -82,6 +82,5 @@ class ReportGeneratorAgent(BaseAgent):
         
 
     async def gen(self, messages):
-        print("gen")
         response = await async_creator(messages=messages, **vision_model_defaults)
         return response

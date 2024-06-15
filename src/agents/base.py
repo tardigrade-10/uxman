@@ -1,6 +1,7 @@
 # from pydantic import BaseModel
 
 from typing import Any
+# from abc import ABC
 
 
 class BaseAgent:
@@ -11,8 +12,4 @@ class BaseAgent:
         pass
 
     def step():
-        pass
-
-    @property
-    def role():
         pass

@@ -7,6 +7,7 @@ from src.utils import (
     basicInfoExtractor,
     addUsageDicts,
     calculate_cost_gpt4_omni,
+    raise_http_exception
 )
 import base64
 
@@ -22,6 +23,10 @@ class UXMan:
         self.image_url = {
             "url": f"data:image/jpeg;base64,{encode_image(image)}",
             "detail": "high",
+        }
+        self.image_url_low = {
+            "url": f"data:image/jpeg;base64,{encode_image(image)}",
+            "detail": "low",
         }
         self.context = context.strip()
         self.stages = {
@@ -77,53 +82,54 @@ class UXMan:
             "gpt_cost": gpt_cost,
             "stages": self.stages
         }
-        # except:
-        #     raise Exception()
+        # except Exception as e:
+        #     raise SystemError(detail=e, status_code=500)
 
-    def _validate_image(self):
+    async def _validate_image(self):
+            # image validation - checks if the image is a valid app image and not a generic image
+        # try:
+        status, usage = await imageValidator(self.image_url_low)
+        print("image validation", status)
+        if status["valid"]==0:
+            reason = status.get("reason")
+            raise_http_exception(detail=f"Image is not valid: {reason}", status_code=401)
+        self.stages["vim"] = 1
+        self.token_usage = addUsageDicts(self.token_usage, usage)
+        # except Exception as e:
+        #     raise_http_exception(detail=e, status_code=500)
 
-        try:
-            # image validation - checks if the image is a valid app image or not a generic image
-            valid, usage = imageValidator(self.image)
-            if not valid:
-                raise ValueError("Image is not valid")
-            self.stages["vim"] = 1
-            self.token_usage = addUsageDicts(self.token_usage, usage)
-        except Exception as e:
-            raise e
 
-    def _validate_context(self):
+    async def _validate_context(self):
         # context validation - checks if the context is valid and not a trash or jailbreak attempt
-        valid, usage = contextValidator(self.context)
-        if not valid:
-            raise ValueError("context is not valid")
+        # try:
+        status, usage = await contextValidator(self.context)
+        print("context validation", status)
+        if status["valid"]==0:
+            reason = status.get("reason")
+            raise_http_exception(detail=f"Context is not valid: {reason}", status_code=401)
         self.stages["vin"] = 1
         self.token_usage = addUsageDicts(self.token_usage, usage)
+        # except Exception as e:
+        #     raise_http_exception(detail=e, status_code=500)
 
-    def validate_input(self):
-        self._validate_image()
+
+    async def validate_input(self):
+        await self._validate_image()
         if not self.context or self.context == "":
-            self.call_context_generator()  # generate new context of the image and assign it to self.context
-        self._validate_context()
+            # self.call_context_generator()  # generate new context of the image and assign it to self.context
+            return
+        await self._validate_context()
 
-    def call_basic_info_extractor(self):
+
+    async def call_basic_info_extractor(self):
         info, usage = basicInfoExtractor(self.img)
         self.basic_info = info
         self.token_usage = addUsageDicts(self.token_usage, usage)
         return
 
+
     async def init(self):
-
-        # self.validate_input()
-        # self.call_basic_info_extractor()
-
+        await self.validate_input()
+        # await self.call_basic_info_extractor()
         response = await self.step()
-
-        # validate inputs
-        # opt: generate background knowledge
-        # generate basic info about the provided image
-        # generate reviews * 10
-        # conclude reviews
-        # review the final review
-
         return response
