@@ -83,18 +83,22 @@ class PeerReviewerAgent(BaseAgent):
         return _dict
 
     async def step(self):
-        print("inside peer step")
-        ui_reviews, ux_reviews = await asyncio.gather(
-            self.gen_review(system_prompt=self.ui_review_prompt),
-            self.gen_review(system_prompt=self.ux_review_prompt),
-        )
-        print("got the reviews from gen")
-        avg_ui_scores = self.get_avg_scores(ui_reviews, self.ui_params)
-        avg_ux_scores = self.get_avg_scores(ux_reviews, self.ux_params)
-        return {
-            "ui_review": avg_ui_scores,
-            "ux_reviews": avg_ux_scores,
-        }, self.peer_review_token_usage
+
+        try:
+            print("inside peer step")
+            ui_reviews, ux_reviews = await asyncio.gather(
+                self.gen_review(system_prompt=self.ui_review_prompt),
+                self.gen_review(system_prompt=self.ux_review_prompt),
+            )
+            print("got the reviews from gen")
+            avg_ui_scores = self.get_avg_scores(ui_reviews, self.ui_params)
+            avg_ux_scores = self.get_avg_scores(ux_reviews, self.ux_params)
+            return {
+                "ui_reviews": avg_ui_scores,
+                "ux_reviews": avg_ux_scores,
+            }, self.peer_review_token_usage
+        except Exception as e:
+            raise SystemError('error inside peer review.step', e)
 
     async def gen(self, messages):
         print("gen")

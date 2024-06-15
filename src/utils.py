@@ -1,4 +1,5 @@
 from src.provider import async_client, async_creator
+from fastapi import HTTPException
 
 def imageValidator(img):
     # check whether the image is a valid app ui image and not some generic image 
@@ -27,3 +28,6 @@ def calculate_cost_gpt4_omni(token_usage):
     rate = 83.55
 
     return {"usd": cost, "inr": cost*rate}
+
+def raise_http_exception(status_code: int, detail: str):
+    raise HTTPException(status_code=status_code, detail=detail)

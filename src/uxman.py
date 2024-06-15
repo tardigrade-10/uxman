@@ -48,6 +48,7 @@ class UXMan:
 
     async def step(self):
 
+        # try:
         # peer review
         peer_reviewer = PeerReviewerAgent(image_url=self.image_url, peers_count=2, context=self.context)
         reviews, usage = await peer_reviewer.step()
@@ -55,16 +56,29 @@ class UXMan:
         self.stages["dpr"] = 1
         gpt_cost = calculate_cost_gpt4_omni(self.token_usage)
 
-        # report generator
+        # ui report generator
+        report_generator = ReportGeneratorAgent(image_url=self.image_url, context=self.context)
+        ui_report, usage = await report_generator.step(peer_reviews=reviews["ui_reviews"], report_type="ui")
+        self.token_usage = addUsageDicts(self.token_usage, usage)
 
+        # ux report generator
+        report_generator = ReportGeneratorAgent(image_url=self.image_url, context=self.context)
+        ux_report, usage = await report_generator.step(peer_reviews=reviews["ux_reviews"], report_type="ux")
+        self.token_usage = addUsageDicts(self.token_usage, usage)
+
+        self.stages["gdr"] = 1
+        gpt_cost = calculate_cost_gpt4_omni(self.token_usage)
 
         # review final report
         return {
             "reviews": reviews,
+            "report": {"ui_report": ui_report, "ux_report": ux_report},
             "usage": self.token_usage,
             "gpt_cost": gpt_cost,
             "stages": self.stages
         }
+        # except:
+        #     raise Exception()
 
     def _validate_image(self):
 

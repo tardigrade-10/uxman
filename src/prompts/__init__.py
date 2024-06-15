@@ -1,5 +1,5 @@
 from src.prompts.peer_review import UI_DESIGN_PEER_REVIEW_PROMPT, UX_DESIGN_PEER_REVIEW_PROMPT
-from src.prompts.report_generator import GENERATE_DESIGN_REPORT
+from src.prompts.report_generator import GENERATE_UI_DESIGN_REPORT, GENERATE_UX_DESIGN_REPORT
 
 
 VALIDATE_IMAGE_INPUT = "is input image valid app page and not a generic image or poster"
