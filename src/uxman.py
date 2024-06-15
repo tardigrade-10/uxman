@@ -49,7 +49,7 @@ class UXMan:
     async def step(self):
 
         # peer review
-        peer_reviewer = PeerReviewerAgent(image_url=self.image_url, peers_count=2)
+        peer_reviewer = PeerReviewerAgent(image_url=self.image_url, peers_count=2, context=self.context)
         reviews, usage = await peer_reviewer.step()
         self.token_usage = addUsageDicts(self.token_usage, usage)
         self.stages["dpr"] = 1

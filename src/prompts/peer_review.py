@@ -31,7 +31,7 @@ Here is the definition of the given paramters for your reference -
 OUTPUT FORMAT - 
 
 ```
-ux_laws_evaluation_scores = {
+{
     "hicks_law": {"score": <score out of 10>, "comment": <comment on this paramter>},
     "fitts_law": {"score": <score out of 10>, "comment": <comment on this paramter>},
     "millers_law": {"score": <score out of 10>, "comment": <comment on this paramter>},

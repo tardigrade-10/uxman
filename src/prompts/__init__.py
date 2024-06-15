@@ -1,4 +1,4 @@
-from src.prompts.peer_review import DESIGN_PEER_REVIEW_PROMPT
+from src.prompts.peer_review import UI_DESIGN_PEER_REVIEW_PROMPT, UX_DESIGN_PEER_REVIEW_PROMPT
 from src.prompts.report_generator import GENERATE_DESIGN_REPORT
 
 
