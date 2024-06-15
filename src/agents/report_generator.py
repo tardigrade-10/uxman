@@ -1,15 +1,15 @@
 from src.agents.base import BaseAgent
 from src.prompts import GENERATE_UX_DESIGN_REPORT, GENERATE_UI_DESIGN_REPORT
 from src.provider import async_creator, vision_model_defaults
-from src.utils import addUsageDicts
+from src.utils import addUsageDicts, raise_http_exception
 import json
-import asyncio
-from src.utils import raise_http_exception
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ReportGeneratorAgent(BaseAgent):
-
-    #  checks the peer reviews generator and summarize all the reviews
 
     def __init__(
         self,
@@ -32,19 +32,17 @@ class ReportGeneratorAgent(BaseAgent):
     async def step(self, peer_reviews: dict, report_type: str):
 
         try:
-            print('inside report generator step with', report_type)
+            logger.info(f"Generating report for type: {report_type}")
+
             if report_type == "ui":
                 system_prompt = self.ui_report_prompt
             elif report_type == "ux":
                 system_prompt = self.ux_report_prompt
             else:
-                raise ValueError(f'invalid report type: {report_type}')
-            
+                raise ValueError(f"Invalid report type: {report_type}")
+
             messages = [
-                {
-                    "role": "system",
-                    "content": [{"type": "text", "text": system_prompt}],
-                },
+                {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
                 {
                     "role": "user",
                     "content": [
@@ -58,29 +56,26 @@ class ReportGeneratorAgent(BaseAgent):
             assistant_content = response.choices[0].message.content
             usage = response.usage.dict()
             self.report_gen_token_usage = addUsageDicts(self.report_gen_token_usage, usage)
-            print('got the content', assistant_content)
+            logger.info("Initial report content received")
+
             if response.choices[0].finish_reason == "length":
-                print("handling finish reason length")
+                logger.info("Handling 'length' finish reason")
                 messages.append(
-                    {
-                        "role": "assistant",
-                        "content": [{"type": "text", "text": assistant_content}],
-                    }
+                    {"role": "assistant", "content": [{"type": "text", "text": assistant_content}]}
                 )
                 response = await self.gen(messages)
                 new_content = response.choices[0].message.content
-                assistant_content = assistant_content + new_content
+                assistant_content += new_content
                 usage = response.usage.dict()
-                self.report_gen_token_usage = addUsageDicts(
-                    self.report_gen_token_usage, usage
-                )
+                self.report_gen_token_usage = addUsageDicts(self.report_gen_token_usage, usage)
 
             report = json.loads(assistant_content)
             return report, self.report_gen_token_usage
-        except Exception as e: 
-            raise_http_exception(status_code=500, detail=e)
-        
+        except Exception as e:
+            logger.error(f"Error generating report: {e}")
+            raise_http_exception(status_code=500, detail=str(e))
 
     async def gen(self, messages):
         response = await async_creator(messages=messages, **vision_model_defaults)
         return response
+

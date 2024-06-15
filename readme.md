@@ -1,10 +1,11 @@
 
 Reqs - 
-parameters to identify design evaluation
-how other people are doing it?
-manually doing the design - peer review - criteria
-evaluate other such tools
+- parameters to identify design evaluation
+- how other people are doing it?
+- manually doing the design evaluation - peer review - criteria
+- evaluate other such tools
 
+## Solution - UXMan 😎 
 
 Flow - 
 1. User will input an image (a screenshot of the web page or app screenshot), along with a context to aid the design report, it can be focus areas, background info about the app, target users etc.
@@ -15,5 +16,23 @@ Flow -
 6. Optional - Report Validation - Further validate the report if it had missed something! 
 
 
-to run 
+Setup instructions
+1. if you have conda installed and setup, the best way is to create a conda environment using environment.yml file
+
+```bash
+conda env create -f environment.yml
+```
+Otherwise, create a virtual env and install deps using requirements.txt
+
+```bash
+pip install -r requirements
+```
+
+
+2. How to run
+
+```bash
 python -m uvicorn main:app --reload
+```
+
+3. Head over to http://127.0.0.1:8000/docs and use the /review endpoint

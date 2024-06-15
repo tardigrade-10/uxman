@@ -4,10 +4,13 @@ from src.provider import async_creator, vision_model_defaults
 from src.utils import addUsageDicts
 import json
 import asyncio
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PeerReviewerAgent(BaseAgent):
-
     def __init__(
         self,
         image_url,
@@ -53,7 +56,6 @@ class PeerReviewerAgent(BaseAgent):
                 ],
             },
         ]
-        # print("MESSAGES", messages)
         tasks = [self.gen(messages) for _ in range(self.peers_count)]
         responses = await asyncio.gather(*tasks)
         reviews = []
@@ -62,35 +64,27 @@ class PeerReviewerAgent(BaseAgent):
             review = json.loads(res_obj["choices"][0]["message"]["content"])
             reviews.append(review)
             usage = res_obj["usage"]
-            self.peer_review_token_usage = addUsageDicts(
-                self.peer_review_token_usage, usage
-            )
-        # print("REVIEWS:", reviews)
+            self.peer_review_token_usage = addUsageDicts(self.peer_review_token_usage, usage)
         return reviews
 
     def get_avg_scores(self, reviews, params):
-        _dict = {param: {"score": 0, "comment": ""} for param in params}
+        scores_dict = {param: {"score": 0, "comment": ""} for param in params}
         for review in reviews:
-            print(review)
             for param in params:
-                _dict[param]["score"] += review[param]["score"]
-                _dict[param]["comment"] = (
-                    _dict[param]["comment"] + "\n\n" + review[param]["comment"]
-                )
-        for key, val in _dict.items():
-            _dict[key]["score"] = val["score"] / self.peers_count
-            
-        return _dict
+                scores_dict[param]["score"] += review[param]["score"]
+                scores_dict[param]["comment"] += f"\n\n{review[param]['comment']}"
+        for key, val in scores_dict.items():
+            scores_dict[key]["score"] = val["score"] / self.peers_count
+        return scores_dict
 
     async def step(self):
-
         try:
-            print("inside peer step")
+            logger.info("Starting peer review step")
             ui_reviews, ux_reviews = await asyncio.gather(
                 self.gen_review(system_prompt=self.ui_review_prompt),
                 self.gen_review(system_prompt=self.ux_review_prompt),
             )
-            print("got the reviews from gen")
+            logger.info("Received reviews from generation step")
             avg_ui_scores = self.get_avg_scores(ui_reviews, self.ui_params)
             avg_ux_scores = self.get_avg_scores(ux_reviews, self.ux_params)
             return {
@@ -98,9 +92,10 @@ class PeerReviewerAgent(BaseAgent):
                 "ux_reviews": avg_ux_scores,
             }, self.peer_review_token_usage
         except Exception as e:
-            raise SystemError('error inside peer review.step', e)
+            logger.error(f"Error in step: {e}")
+            raise SystemError('Error inside PeerReviewerAgent.step', e)
 
     async def gen(self, messages):
-        print("gen")
+        logger.info("Generating review")
         response = await async_creator(messages=messages, **vision_model_defaults)
         return response
